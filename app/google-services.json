@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "629995798252",
+    "project_id": "androidarica-42c0e",
+    "storage_bucket": "androidarica-42c0e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:629995798252:android:8abfcee30c134c0d7e2fc9",
+        "android_client_info": {
+          "package_name": "com.example.historiaarica.Data"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJjGsEEM4p_OAyOUNyOdR0JkkNk66IjCw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
