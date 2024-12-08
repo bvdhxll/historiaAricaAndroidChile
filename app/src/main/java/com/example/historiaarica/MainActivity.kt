@@ -21,6 +21,13 @@ import com.example.historiaarica.Data.NombreViewModel
 import com.example.historiaarica.ui.theme.HistoriaAricaTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,21 +47,28 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(viewModel: NombreViewModel) {
     var currentScreen by remember { mutableStateOf("welcome") }
 
-    when (currentScreen) {
+        when (currentScreen) {
         "welcome" -> WelcomeScreen(
             onNavigateToInfo = { currentScreen = "info" },
             onNavigateToRegister = { currentScreen = "register" },
             onLoginSuccess = { currentScreen = "timeline" }
         )
         "info" -> HistoryInfoScreen(viewModel)
-        "register" -> RegisterScreen(viewModel, onRegisterSuccess = { currentScreen = "welcome" })
-        "timeline" -> TimelineScreen()
+        "register" -> RegisterScreen(
+            viewModel = viewModel,
+            onRegisterSuccess = { currentScreen = "welcome" },
+            onNavigateToLogin = { currentScreen = "welcome" }
+        )
+        "timeline" -> TimelineScreen(
+            onNavigateToHome = { currentScreen = "welcome" },
+            onNavigateToMap = { currentScreen = "timeline" },
+            onNavigateToProfile = { currentScreen = "profile" }
+        )
     }
 }
 
 @Composable
 fun HistoryInfoScreen(viewModel: NombreViewModel) {
-    // Implementación para mostrar información histórica
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -94,9 +108,9 @@ fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(android.R.drawable.ic_menu_mapmode),
+                painter = painterResource(R.drawable.morro_arica),
                 contentDescription = "Imagen de bienvenida",
-                modifier = Modifier.size(150.dp)
+                modifier = Modifier.size(300.dp)
             )
             Spacer(modifier = Modifier.height(14.dp))
             Text(
@@ -166,15 +180,16 @@ fun WelcomeScreen(
     }
 }
 
-fun Text(color: Color) {
-
-}
-
 @Composable
-fun RegisterScreen(viewModel: NombreViewModel, onRegisterSuccess: () -> Unit) {
+fun RegisterScreen(
+    viewModel: NombreViewModel,
+    onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit) {
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var succesMessage by remember {mutableStateOf<String?>("")}
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Column(
@@ -234,6 +249,7 @@ fun RegisterScreen(viewModel: NombreViewModel, onRegisterSuccess: () -> Unit) {
                                     .set(user)
                                     .addOnSuccessListener {
                                         onRegisterSuccess()
+                                        succesMessage = "Registrado correctamente"
                                     }
                                     .addOnFailureListener {
                                         errorMessage = "Error al guardar en Firestore: ${it.message}"
@@ -248,24 +264,67 @@ fun RegisterScreen(viewModel: NombreViewModel, onRegisterSuccess: () -> Unit) {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Registrarse")
+            Text("\uD835\uDD7D\uD835\uDD8A\uD835\uDD8C\uD835\uDD8E\uD835\uDD98\uD835\uDD99\uD835\uDD97\uD835\uDD86\uD835\uDD97\uD835\uDD98\uD835\uDD8A")
+        }
+
+        Button(
+            onClick = onNavigateToLogin,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("¿Ya tienes cuenta? Iniciar sesión")
         }
 
         errorMessage?.let {
             Spacer(modifier = Modifier.height(16.dp))
             Text(it, color = Color.Red)
         }
+
+        succesMessage?.let {
+            if (it.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(it, color = Color.Green)
+            }
+        }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelineScreen() {
+fun TimelineScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToMap: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Línea de Tiempo", fontWeight = FontWeight.Bold) }
             )
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Home, contentDescription = "Inicio") },
+                    label = { Text("Inicio") },
+                    selected = false,
+                    onClick = onNavigateToHome
+                )
+
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Place, contentDescription = "Mapa") },
+                    label = { Text("Mapa") },
+                    selected = true,
+                    onClick = onNavigateToMap
+                )
+
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Person, contentDescription = "Mi Cuenta") },
+                    label = { Text("Mi Cuenta") },
+                    selected = false,
+                    onClick = onNavigateToProfile
+                )
+            }
         }
     ) { innerPadding ->
         Column(
