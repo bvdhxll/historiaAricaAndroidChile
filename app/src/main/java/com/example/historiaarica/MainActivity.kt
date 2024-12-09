@@ -17,14 +17,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.historiaarica.Data.NombreViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Place
 import com.example.historiaarica.ui.theme.HistoriaAricaTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -64,6 +69,56 @@ fun MainScreen(viewModel: NombreViewModel) {
             onNavigateToMap = { currentScreen = "timeline" },
             onNavigateToProfile = { currentScreen = "profile" }
         )
+            "profile" -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    val auth = FirebaseAuth.getInstance()
+                    val currentUser = auth.currentUser
+
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Perfil",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .padding(bottom = 16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    currentUser?.email?.let { email ->
+                        Text(
+                            text = email,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Button(
+                        onClick = {
+                            auth.signOut()
+                            currentScreen = "welcome"
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 32.dp)
+                            .width(200.dp)
+                    ) {
+                        Text("Cerrar Sesión")
+                    }
+                    Button(
+                        onClick = { currentScreen = "timeline" },
+                        modifier = Modifier
+                            .padding(horizontal = 32.dp)
+                            .width(200.dp)
+                    ) {
+                        Text("Volver")
+                    }
+                }
+            }
     }
 }
 
@@ -344,4 +399,44 @@ fun TimelineScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileScreen(onNavigateToHome: () -> Unit) {
+    val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser
 
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold) }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Person,
+                contentDescription = "Perfil",
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(bottom = 16.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            currentUser?.email?.let { email ->
+                Text(
+                    text = email,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
