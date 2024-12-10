@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
 
-    id("com.google.gms.google-services") // Solo debe estar aquí, no repetirlo
+    id("com.google.gms.google-services")
 }
 
 android {

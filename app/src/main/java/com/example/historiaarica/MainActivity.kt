@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,19 +58,23 @@ fun MainScreen(viewModel: NombreViewModel) {
         "welcome" -> WelcomeScreen(
             onNavigateToInfo = { currentScreen = "info" },
             onNavigateToRegister = { currentScreen = "register" },
-            onLoginSuccess = { currentScreen = "timeline" }
+            onLoginSuccess = { currentScreen = "home" }
         )
-        "info" -> HistoryInfoScreen(viewModel)
         "register" -> RegisterScreen(
             viewModel = viewModel,
             onRegisterSuccess = { currentScreen = "welcome" },
             onNavigateToLogin = { currentScreen = "welcome" }
         )
         "timeline" -> TimelineScreen(
-            onNavigateToHome = { currentScreen = "welcome" },
+            onNavigateToHome = { currentScreen = "home" },
             onNavigateToMap = { currentScreen = "timeline" },
             onNavigateToProfile = { currentScreen = "profile" }
         )
+        "home" -> HistoryInfoScreen(
+            onNavigateToProfile = { currentScreen = "profile" },
+            onNavigateToTimeline = { currentScreen = "timeline"}
+        )
+
             "profile" -> {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -110,7 +116,7 @@ fun MainScreen(viewModel: NombreViewModel) {
                         Text("Cerrar Sesión")
                     }
                     Button(
-                        onClick = { currentScreen = "timeline" },
+                        onClick = { currentScreen = "home" },
                         modifier = Modifier
                             .padding(horizontal = 32.dp)
                             .width(200.dp)
@@ -122,18 +128,71 @@ fun MainScreen(viewModel: NombreViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryInfoScreen(viewModel: NombreViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Información histórica", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Aquí puedes explorar eventos históricos de Arica.")
+fun HistoryInfoScreen(
+    onNavigateToTimeline: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
+    val historicPlaces = listOf(
+        "Morro de Arica",
+        "Catedral San Marcos",
+        "Ex Aduana",
+        "Casa de la Cultura",
+        "Plaza Colón"
+    )
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Explora la historia de Arica", fontWeight = FontWeight.Bold) }
+            )
+        },
+        bottomBar = {
+            BottomNavBar(
+                currentScreen = "home",
+                onNavigateToHome = {  },
+                onNavigateToMap = onNavigateToTimeline,
+                onNavigateToProfile = onNavigateToProfile
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(historicPlaces) { place ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = place,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Button(
+                            onClick = { /* Navegación al Mapa */ }
+                        ) {
+                            Text("Explorar")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -358,28 +417,12 @@ fun TimelineScreen(
             )
         },
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") },
-                    selected = false,
-                    onClick = onNavigateToHome
-                )
-
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Place, contentDescription = "Mapa") },
-                    label = { Text("Mapa") },
-                    selected = true,
-                    onClick = onNavigateToMap
-                )
-
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Person, contentDescription = "Mi Cuenta") },
-                    label = { Text("Mi Cuenta") },
-                    selected = false,
-                    onClick = onNavigateToProfile
-                )
-            }
+            BottomNavBar(
+                currentScreen = "timeline",
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToMap = onNavigateToMap,
+                onNavigateToProfile = onNavigateToProfile
+            )
         }
     ) { innerPadding ->
         Column(
@@ -396,6 +439,37 @@ fun TimelineScreen(
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+}
+
+@Composable
+fun BottomNavBar(
+    currentScreen: String,
+    onNavigateToHome: () -> Unit,
+    onNavigateToMap: () -> Unit,
+    onNavigateToProfile: () -> Unit
+) {
+    NavigationBar {
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Home, contentDescription = "Inicio") },
+            label = { Text("Inicio") },
+            selected = currentScreen == "home",
+            onClick = onNavigateToHome
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Place, contentDescription = "Mapa") },
+            label = { Text("Mapa") },
+            selected = currentScreen == "timeline",
+            onClick = onNavigateToMap
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Person, contentDescription = "Mi Cuenta") },
+            label = { Text("Mi Cuenta") },
+            selected = currentScreen == "profile",
+            onClick = onNavigateToProfile
+        )
     }
 }
 
