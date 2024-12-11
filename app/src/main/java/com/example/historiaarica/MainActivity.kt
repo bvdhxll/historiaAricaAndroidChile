@@ -22,9 +22,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.MapProperties
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Home
@@ -35,6 +41,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import com.google.android.gms.maps.CameraUpdateFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +60,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(viewModel: NombreViewModel) {
     var currentScreen by remember { mutableStateOf("welcome") }
+    var selectedPosition by remember { mutableStateOf<LatLng?>(null) }
 
         when (currentScreen) {
         "welcome" -> WelcomeScreen(
@@ -65,15 +73,19 @@ fun MainScreen(viewModel: NombreViewModel) {
             onRegisterSuccess = { currentScreen = "welcome" },
             onNavigateToLogin = { currentScreen = "welcome" }
         )
-        "timeline" -> TimelineScreen(
-            onNavigateToHome = { currentScreen = "home" },
-            onNavigateToMap = { currentScreen = "timeline" },
-            onNavigateToProfile = { currentScreen = "profile" }
-        )
-        "home" -> HistoryInfoScreen(
-            onNavigateToProfile = { currentScreen = "profile" },
-            onNavigateToTimeline = { currentScreen = "timeline"}
-        )
+            "timeline" -> TimelineScreen(
+                onNavigateToHome = { currentScreen = "home" },
+                onNavigateToMap = { currentScreen = "timeline" },
+                onNavigateToProfile = { currentScreen = "profile" },
+                initialPosition = selectedPosition ?: LatLng(-18.4746, -70.2979)
+            )
+            "home" -> HistoryInfoScreen(
+                onNavigateToProfile = { currentScreen = "profile" },
+                onNavigateToTimeline = { position ->
+                    selectedPosition = position
+                    currentScreen = "timeline"
+                }
+            )
 
             "profile" -> {
                 Column(
@@ -128,20 +140,46 @@ fun MainScreen(viewModel: NombreViewModel) {
     }
 }
 
+data class HistoricPlace(
+    val name: String,
+    val position: LatLng,
+    val description: String
+)
+
+val historicPlaces = listOf(
+    HistoricPlace(
+        "Morro de Arica",
+        LatLng(-18.4831, -70.3197),
+        "Histórico morro de la ciudad"
+    ),
+    HistoricPlace(
+        "Catedral San Marcos",
+        LatLng(-18.4748, -70.3197),
+        "Catedral histórica de Arica"
+    ),
+    HistoricPlace(
+        "Ex Aduana",
+        LatLng(-18.4741, -70.3222),
+        "Antigua aduana de la ciudad"
+    ),
+    HistoricPlace(
+        "Casa de la Cultura",
+        LatLng(-18.4756, -70.3189),
+        "Centro cultural de Arica"
+    ),
+    HistoricPlace(
+        "Plaza Colón",
+        LatLng(-18.4747, -70.3197),
+        "Plaza principal de la ciudad"
+    )
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryInfoScreen(
-    onNavigateToTimeline: () -> Unit,
+    onNavigateToTimeline: (LatLng) -> Unit,
     onNavigateToProfile: () -> Unit
 ) {
-    val historicPlaces = listOf(
-        "Morro de Arica",
-        "Catedral San Marcos",
-        "Ex Aduana",
-        "Casa de la Cultura",
-        "Plaza Colón"
-    )
-
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -152,7 +190,7 @@ fun HistoryInfoScreen(
             BottomNavBar(
                 currentScreen = "home",
                 onNavigateToHome = {  },
-                onNavigateToMap = onNavigateToTimeline,
+                onNavigateToMap = { onNavigateToTimeline(LatLng(-18.4746, -70.2979)) },
                 onNavigateToProfile = onNavigateToProfile
             )
         }
@@ -179,13 +217,13 @@ fun HistoryInfoScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = place,
+                            text = place.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium
                         )
 
                         Button(
-                            onClick = { /* Navegación al Mapa */ }
+                            onClick = { onNavigateToTimeline(place.position) }
                         ) {
                             Text("Explorar")
                         }
@@ -195,7 +233,6 @@ fun HistoryInfoScreen(
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WelcomeScreen(
@@ -408,12 +445,25 @@ fun RegisterScreen(
 fun TimelineScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToMap: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    initialPosition: LatLng = LatLng(-18.4746, -70.2979)
 ) {
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(initialPosition, 15f)
+    }
+
+    LaunchedEffect(initialPosition) {
+        cameraPositionState.animate(
+            update = CameraUpdateFactory.newCameraPosition(
+                CameraPosition.fromLatLngZoom(initialPosition, 15f)
+            )
+        )
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Línea de Tiempo", fontWeight = FontWeight.Bold) }
+                title = { Text("Mapa de Arica", fontWeight = FontWeight.Bold) }
             )
         },
         bottomBar = {
@@ -428,16 +478,23 @@ fun TimelineScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(innerPadding)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                "Explora los eventos históricos de Arica",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = false
+                )
+            ) {
+                historicPlaces.forEach { place ->
+                    Marker(
+                        state = MarkerState(position = place.position),
+                        title = place.name,
+                        snippet = place.description
+                    )
+                }
+            }
         }
     }
 }
