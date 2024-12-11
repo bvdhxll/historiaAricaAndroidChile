@@ -149,27 +149,22 @@ data class HistoricPlace(
 val historicPlaces = listOf(
     HistoricPlace(
         "Morro de Arica",
-        LatLng(-18.4831, -70.3197),
+        LatLng(-18.480277777778, -70.323611111111),
         "Histórico morro de la ciudad"
     ),
     HistoricPlace(
         "Catedral San Marcos",
-        LatLng(-18.4748, -70.3197),
+        LatLng(-18.478951, -70.320725),
         "Catedral histórica de Arica"
     ),
     HistoricPlace(
         "Ex Aduana",
-        LatLng(-18.4741, -70.3222),
+        LatLng(-18.47715278, -70.32103611),
         "Antigua aduana de la ciudad"
     ),
     HistoricPlace(
-        "Casa de la Cultura",
-        LatLng(-18.4756, -70.3189),
-        "Centro cultural de Arica"
-    ),
-    HistoricPlace(
         "Plaza Colón",
-        LatLng(-18.4747, -70.3197),
+        LatLng(-18.4778438, -70.3181884),
         "Plaza principal de la ciudad"
     )
 )
